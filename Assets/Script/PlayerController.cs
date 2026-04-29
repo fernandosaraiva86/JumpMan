@@ -4,13 +4,15 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
-    public static PlayerController Instance;//Método Singleton
+    public static PlayerController Instance; //Método Singleton
 
-    [SerializeField] private TextMeshProUGUI gameOverText;//Variável Game Over
-    [SerializeField] private ParticleSystem explosionParticle;//Particula da Explosão
+    [SerializeField] private TextMeshProUGUI gameOverText; //Variável Game Over
+    [SerializeField] private ParticleSystem explosionParticle; //Particula da Explosão
 
-    [SerializeField] private ParticleSystem particulaD;//Particula de poeria perna direita
-    [SerializeField] private ParticleSystem particulaE;//Particula de poeria perna esquerda
+    [SerializeField] private ParticleSystem particulaD; //Particula de poeria perna direita
+    [SerializeField] private ParticleSystem particulaE; //Particula de poeria perna esquerda
+
+    private AudioSource playerAudio; //Áudio
 
     private Rigidbody playerRb;
 
@@ -39,11 +41,14 @@ public class PlayerController : MonoBehaviour
     {
         playerRb = GetComponent<Rigidbody>();
         playerAnim = GetComponent<Animator>();
+        playerAudio = GetComponent<AudioSource>();
     }
     public void OnJump(InputValue value)
     {
         if (value.isPressed && isOnGround)
         {
+            playerAudio.PlayOneShot(playerAudio.clip, 1.0f);
+            
             //Parar animação das partículas de poeira nos pés
             particulaD.Stop();
             particulaE.Stop();
@@ -59,7 +64,7 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Ground"))
+        if (collision.gameObject.CompareTag("Ground") && !gameOver)
         {
             //Ativar animação das partículas de poeira nos pés
             particulaD.Play();
@@ -87,11 +92,5 @@ public class PlayerController : MonoBehaviour
         playerRb.AddForce(Vector3.down * 
             (gravityModifier -1) * Physics.gravity.magnitude, ForceMode.Acceleration);
 
-        if (gameOver)
-        {
-            //Parar animação das partículas de poeira nos pés
-            particulaD.Stop();
-            particulaE.Stop();
-        }
     }
 }
