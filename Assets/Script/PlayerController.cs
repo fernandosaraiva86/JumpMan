@@ -1,8 +1,17 @@
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
+    public static PlayerController Instance;//Método Singleton
+
+    [SerializeField] private TextMeshProUGUI gameOverText;//Variável Game Over
+    [SerializeField] private ParticleSystem explosionParticle;//Particula da Explosão
+
+    [SerializeField] private ParticleSystem particulaD;//Particula de poeria perna direita
+    [SerializeField] private ParticleSystem particulaE;//Particula de poeria perna esquerda
+
     private Rigidbody playerRb;
 
     public float gravityModifier = 1f;
@@ -15,6 +24,17 @@ public class PlayerController : MonoBehaviour
     //Game Over
     public bool gameOver = false;
 
+
+    private void Awake()
+    {
+        // Singleton
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+    }
+
+
     private void Start()
     {
         playerRb = GetComponent<Rigidbody>();
@@ -24,6 +44,10 @@ public class PlayerController : MonoBehaviour
     {
         if (value.isPressed && isOnGround)
         {
+            //Parar animação das partículas de poeira nos pés
+            particulaD.Stop();
+            particulaE.Stop();
+
             playerRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
 
             isOnGround = false;
@@ -37,12 +61,22 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
+            //Ativar animação das partículas de poeira nos pés
+            particulaD.Play();
+            particulaE.Play();
             isOnGround = true;
         }
-        if (collision.gameObject.CompareTag("Obstacle"))
+        //Morte do jogador
+        else if (collision.gameObject.CompareTag("Obstacle"))
         {
+            //Parar animação das partículas de poeira nos pés
+            particulaD.Stop();
+            particulaE.Stop();
+
             gameOver = true;
-            Debug.Log("Game Over!");
+            gameOverText.gameObject.SetActive(true);
+            explosionParticle.Play();
+            Destroy(collision.gameObject);
             playerAnim.SetBool("Death_b", true);
             playerAnim.SetInteger("DeathType_int", 1);
         }
@@ -52,5 +86,12 @@ public class PlayerController : MonoBehaviour
     {
         playerRb.AddForce(Vector3.down * 
             (gravityModifier -1) * Physics.gravity.magnitude, ForceMode.Acceleration);
+
+        if (gameOver)
+        {
+            //Parar animação das partículas de poeira nos pés
+            particulaD.Stop();
+            particulaE.Stop();
+        }
     }
 }
